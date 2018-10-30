@@ -21,13 +21,13 @@ class GwEvents
      */
     public static function onConnect($client_id)
     {
-        // 向当前client_id发送数据
-        $r = msg_handle('init','已绑定');
-        Gateway::sendToClient($client_id, json_encode($r));
-        // 向所有人发送
-//        $r['type']='normal';
-//        $r['data'] = ['message'=>'上线'];
-//        Gateway::sendToAll(json_encode($r));
+        $r['type']='2';
+        $r['data']=$client_id;
+        Gateway::sendToClient($client_id,json_encode($r));
+        $r['type'] = "3";
+        $r['data'] = "用户上线";
+        Gateway::sendToAll(json_encode($r));
+
     }
 
     /**
@@ -35,11 +35,17 @@ class GwEvents
      * @param int $client_id 连接id
      * @param mixed $message 具体消息
      */
-    public static function onMessage($client_id, $message)
+    public static function onMessage($client_id,$message)
     {
-        // 向所有人发送
-        $r = msg_handle('normal',$message);
+        $message = json_decode($message);
+        $message->time = date("H:m:s",time());
+        $r = [
+            'type'=>1,
+            'data'=>$message,
+        ];
+//        print_r($r);
         Gateway::sendToAll(json_encode($r));
+
     }
 
     /**

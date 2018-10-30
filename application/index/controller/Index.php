@@ -16,7 +16,7 @@ class Index extends VerifyLogin
      */
     public function index()
     {
-        $this->assign('uid',$this->uid);
+        $this->assign('user_info',$this->user_info);
         return $this->fetch();
     }
 
@@ -25,8 +25,10 @@ class Index extends VerifyLogin
      */
     public function bind()
     {
+        print_r($_POST);
+//        exit();
+        $r = msg_handle(3,"登录成功");
         Gateway::bindUid($_POST['client_id'],$this->uid);
-        $r = msg_handle('normal','已绑定uid');
         Gateway::sendToUid($this->uid,json_encode($r));
     }
 
@@ -36,12 +38,16 @@ class Index extends VerifyLogin
     public function send()
     {
         $data = [
-            'user_info'=>$this->user_info['username'],
+            'username'=>$this->user_info['username'],
             'time'=>date('H:m:s',time()),
             'message'=>$_POST['data']
         ];
         $r = msg_handle('normal',$data);
         Gateway::sendToAll(json_encode($r));
+    }
+    public function change_user_info()
+    {
+
     }
 
 

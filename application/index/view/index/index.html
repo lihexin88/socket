@@ -49,12 +49,13 @@
 	</head>
 
 	<body>
-		<input type="text" readonly="readonly" style="display: none;" name="uid" id="uid" value="{$uid??''}" />
+		<input type="text" readonly="readonly" style="display: none;" name="uid" id="uid" value="{$user_info['id']??''}" />
+		<input type="text" readonly="readonly" style="display: none;" name="username" id="username" value="{$user_info['username']??''}" />
 		<button onclick="get_connect()" id="login_out">上线</button>
 		<div id='display'></div>
 		<div id='input_area_div'>
 			<input required='required' type='text' id='input_area'>
-			<input type='button' onclick="send_msg($('#input_area').val())" value='发送'>
+			<input type='button' onclick="send_msg()" value='发送'>
 		</div>
 		<audio src="__STATIC__/audio/msg.MP3" id="get_message"></audio>
 		<script type="text/javascript">
@@ -79,61 +80,58 @@
 			function get_connect() {
 				ws = new WebSocket("ws://localhost:8283");
 				ws.onmessage = function(e) {
-					layer.msg("收到新消息");
 					var data = JSON.parse(e.data);
-					console.log("显示接收到的信息");
-					console.log(data);
-					if(data['type'] == "init"){
+//					console.log(data);return false;
+//					if(true){
+					if(data['type'] == "2"){
 						var bind_data = {
-							"client_id":data['data']['client_id']
+							"client_id":data['data']
 						}
+						layer.msg('登录中', {
+						  icon: 16
+						  ,shade: 0.5
+						});
+//						console.log(bind_data);return false;
 						$.ajax({
 							type:"post",
 							url:"index/index/bind",
 							data:bind_data,
 							success:function(data){
-//								console.log(data);
-							console.log("成功绑定client_id与uid");
 							},
 							error:function(data){
 								console.log(data);
 							},
 							async:true
 						});
-					}else{						
+					}else if(data['type'] == 3){
+						layer.msg(data['data']);
+					}else{
+						layer.msg("收到新消息");
+						console.log(data);
 						var play_music = document.getElementById("get_message");
 						play_music.play();
-						console.log('this'+data['data']);
-						$("#display").append("<span class = 'display_line'>" + data['data'] + "</span><hr style = 'margin:0px;padding:0px'>");
-						$("#display").scrollTop($("#display")["0"].scrollHeight);
+						console.log(data);
+						$("#display").append("<span class = 'display_line'>" +data['data']['time']+" " + data['data']['username']+" : "+data['data']['msg']+ "</span><hr style = 'margin:0px;padding:0px'>");
+						$("#display").scrollTop($("#display")["0"].scrollHeight);						
 					}
 				};
 				is_connect_socket = true;
 			}
-			function send_msg(data) {
-				if(!data) {
-					$("#input_area").focus();
-					layer.msg("输入信息为空！");
-					return false;
+			function send_msg() {
+				var data = {
+					'uid':$('#uid').val(),
+					'username':$('#username').val(),
+					'msg':$('#input_area').val(),
 				}
+//				if(!data) {
+//					$("#input_area").focus();
+//					layer.msg("输入信息为空！");
+//					return false;
+//				}
 				if(!is_connect_socket) {
 					confirm_connect();
 				} else {
-					data = {
-						'data':data
-					};
-					$.ajax({
-						type:"post",
-						data:data,
-						url:"index/index/send",
-						success:function(data){
-							
-						},
-						error:function(){
-							layer.msg("消息发送失败！");
-						},
-						async:true
-					});
+					ws.send(JSON.stringify(data));
 				}
 			}
 		</script>

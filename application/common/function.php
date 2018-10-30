@@ -14,5 +14,6 @@
  */
 function msg_handle($type, $data = array())
 {
+    //type 为类型：1，接收来自客户端消息   2，服务器消息    -1 错误     。。。待加
     return array('type'=>$type,'data' => $data);
 }
