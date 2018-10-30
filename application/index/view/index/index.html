@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<style type="text/css">
+			body {
+				width: 100%;
+			}
+			
+			#display {
+				padding: 2px;
+				border: groove;
+				border-radius: 10px;
+				float: left;
+				width: 80%;
+				height: 160px;
+				overflow-y: auto;
+				margin-bottom: 20px;
+			}
+			
+			#input_area_div {
+				clear: both;
+				display: inline-block;
+				top: 200px;
+				float: left;
+			}
+			
+			#input_area {
+				line-height: 20px;
+			}
+			
+			#login_out {
+				float: right;
+			}
+			
+			.display_line {
+				background-color: beige;
+				margin: 0px;
+				margin-top: 2px;
+				padding: 0px;
+			}
+		</style>
+
+		<script src="__STATIC__/jquery/jquery.js" type="text/javascript" charset="utf-8"></script>
+		<script src="__STATIC__/jquery/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="__STATIC__/layer/layer.js" type="text/javascript" charset="utf-8"></script>
+	</head>
+
+	<body>
+		<input type="text" readonly="readonly" style="display: none;" name="uid" id="uid" value="{$uid??''}" />
+		<button onclick="get_connect()" id="login_out">上线</button>
+		<div id='display'></div>
+		<div id='input_area_div'>
+			<input required='required' type='text' id='input_area'>
+			<input type='button' onclick="send_msg($('#input_area').val())" value='发送'>
+		</div>
+		<audio src="__STATIC__/audio/msg.MP3" id="get_message"></audio>
+		<script type="text/javascript">
+			//页面层
+		</script>
+		<script type="text/javascript">
+			var is_connect_socket = false;
+
+			function confirm_connect() {
+				//询问框
+				layer.confirm('offline，sign in now ??', {
+					btn: ['确认', '取消'] //按钮
+				}, function() {
+					get_connect();
+					$("#login_out").html("下线");
+				}, function() {
+
+				});
+
+			}
+
+			function get_connect() {
+				ws = new WebSocket("ws://localhost:8283");
+				ws.onmessage = function(e) {
+					layer.msg("收到新消息");
+					var data = JSON.parse(e.data);
+					console.log("显示接收到的信息");
+					console.log(data);
+					if(data['type'] == "init"){
+						var bind_data = {
+							"client_id":data['data']['client_id']
+						}
+						$.ajax({
+							type:"post",
+							url:"index/index/bind",
+							data:bind_data,
+							success:function(data){
+//								console.log(data);
+							console.log("成功绑定client_id与uid");
+							},
+							error:function(data){
+								console.log(data);
+							},
+							async:true
+						});
+					}else{						
+						var play_music = document.getElementById("get_message");
+						play_music.play();
+						console.log('this'+data['data']);
+						$("#display").append("<span class = 'display_line'>" + data['data'] + "</span><hr style = 'margin:0px;padding:0px'>");
+						$("#display").scrollTop($("#display")["0"].scrollHeight);
+					}
+				};
+				is_connect_socket = true;
+			}
+			function send_msg(data) {
+				if(!data) {
+					$("#input_area").focus();
+					layer.msg("输入信息为空！");
+					return false;
+				}
+				if(!is_connect_socket) {
+					confirm_connect();
+				} else {
+					data = {
+						'data':data
+					};
+					$.ajax({
+						type:"post",
+						data:data,
+						url:"index/index/send",
+						success:function(data){
+							
+						},
+						error:function(){
+							layer.msg("消息发送失败！");
+						},
+						async:true
+					});
+				}
+			}
+		</script>
+	</body>
+
+</html>
