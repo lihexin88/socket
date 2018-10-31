@@ -40,7 +40,6 @@ class Login extends Controller
         }
             session_start();
             $_SESSION['uid'] = $User['id'];
-//            print_r( $_SESSION);exit();
             $this->redirect('../index');
     }
     public function logout()

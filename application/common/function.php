@@ -14,10 +14,6 @@
  */
 function msg_handle($type, $data = array())
 {
-    //type 为类型：1，接收来自客户端消息   2，服务器反馈的消息  3, 服务器统一推送  -1 错误     。。。待加
+    //type 为类型：1，接收来自客户端消息   2，服务器消息    -1 错误     。。。待加
     return array('type'=>$type,'data' => $data);
-}
-function GetUserInfoByUid($uid)
-{
-    return \app\common\model\UserInfo::get(['id'=>$uid]);
 }
