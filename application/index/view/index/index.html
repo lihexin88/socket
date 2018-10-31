@@ -78,7 +78,7 @@
 			}
 
 			function get_connect() {
-				ws = new WebSocket("ws://localhost:8283");
+				ws = new WebSocket("ws://127.0.0.1:8283");
 				ws.onmessage = function(e) {
 					var data = JSON.parse(e.data);
 //					console.log(data);return false;
@@ -97,6 +97,7 @@
 							url:"index/index/bind",
 							data:bind_data,
 							success:function(data){
+								console.log(data);
 							},
 							error:function(data){
 								console.log(data);
@@ -121,7 +122,8 @@
 				var data = {
 					'uid':$('#uid').val(),
 					'username':$('#username').val(),
-					'msg':$('#input_area').val(),
+					'msg':Math.floor(Math.random()*100),
+//					'msg':$('#input_area').val(),
 				}
 //				if(!data) {
 //					$("#input_area").focus();
