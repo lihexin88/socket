@@ -21,7 +21,8 @@ class VerifyLogin extends Controller
         parent::__construct($request);
         if(UserInfo::is_login()){
            $this->uid = $_SESSION['uid'];
-           $this->user_info = UserInfo::get($this->uid);
+           $this->user_info = UserInfo::get(['id'=>$this->uid]);
+//           print_r($this->user_info['username']);
            return true;
         }
         $this->error("请先登录",url("login/login"));

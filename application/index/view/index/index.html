@@ -49,12 +49,17 @@
 	</head>
 
 	<body>
-		<input type="text" readonly="readonly" style="display: none;" name="uid" id="uid" value="{$uid??''}" />
+		<input type="text" readonly="readonly" style="display: none;" name="uid" id="uid" value="{$user_info['uid']??''}" />
+		用户：<input type="text" readonly="readonly" style="width: 50px;border: hidden;color: #8D8D8D;" name="username" id="username" value="{$user_info['username']??''}" />
 		<button onclick="get_connect()" id="login_out">上线</button>
 		<div id='display'></div>
 		<div id='input_area_div'>
 			<input required='required' type='text' id='input_area'>
 			<input type='button' onclick="send_msg($('#input_area').val())" value='发送'>
+		</div>
+		<div id="change_user_info">
+				<input type="text" name="new_username" id="new_username" value="" placeholder="请输入新的用户名  3-6字" required="required" />
+				<button onclick="change()">提交</button>
 		</div>
 		<audio src="__STATIC__/audio/msg.MP3" id="get_message"></audio>
 		<script type="text/javascript">
@@ -69,87 +74,133 @@
 					btn: ['确认', '取消'] //按钮
 				}, function() {
 					get_connect();
-					$("#login_out").html("下线");
 				}, function() {
+					layer.msg("已取消",
+					{
+						time:1000
+					});
 
 				});
 
 			}
-
 			function get_connect() {
 				ws = new WebSocket("ws://localhost:8283");
+				$("#login_out").html("下线");
+				$("#login_out").attr("onclick","offline()");
 				ws.onmessage = function(e) {
-					layer.msg("收到新消息");
 					var data = JSON.parse(e.data);
 					console.log("显示接收到的信息");
 					console.log(data);
-					if(data['type'] == "init"){
-						var bind_data = {
-							"client_id":data['data']['client_id']
-						}
-						$.ajax({
-							type:"post",
-							url:"index/index/bind",
-							data:bind_data,
-							success:function(data){
-<<<<<<< HEAD
-								console.log(data);
-//								console.log(data);
-							console.log("成功绑定client_id与uid");
-=======
->>>>>>> parent of 9edf1bf... change_gateway_version
-							},
-							error:function(data){
-								console.log(data);
-							},
-							async:true
-						});
-					}else{
+					if(data['type'] == "1") {
+						//						return false;
 						var play_music = document.getElementById("get_message");
 						play_music.play();
-						console.log('this'+data['data']);
-						$("#display").append("<span class = 'display_line'>" + data['data'] + "</span><hr style = 'margin:0px;padding:0px'>");
+						console.log('this' + data['data']);
+						$("#display").append("<span class = 'display_line'>" + data['data']['time'] + " " + data['data']['username'] + ":" + data['data']['msg'] + "</span><hr style = 'margin:0px;padding:0px'>");
 						$("#display").scrollTop($("#display")["0"].scrollHeight);
+					} else if(data['type'] == 2) {
+						layer.msg('登录中', {
+							icon: 16,
+							shade: 0.5
+						});
+						var bind_data = {
+							"client_id": data['data']['client_id']
+						}
+						console.log("bind_client_id" + bind_data);
+						$.ajax({
+							type: "post",
+							url: "index/index/bind",
+							data: bind_data,
+							success: function(data) {
+
+							},
+							error: function(data) {
+								console.log(data);
+							},
+							async: true
+						});
+					} else {
+						layer.msg(data['data']['message']);
 					}
 				};
 				is_connect_socket = true;
 			}
+
 			function send_msg() {
 				var data = {
-					'uid':$('#uid').val(),
-					'username':$('#username').val(),
-<<<<<<< HEAD
-					'msg':Math.floor(Math.random()*100),
-//					'msg':$('#input_area').val(),
-			}
-=======
-					'msg':$('#input_area').val(),
+					'uid': $('#uid').val(),
+					'username': $('#username').val(),
+					'msg': $('#input_area').val(),
 				}
-//				if(!data) {
-//					$("#input_area").focus();
-//					layer.msg("输入信息为空！");
-//					return false;
-//				}
->>>>>>> parent of 9edf1bf... change_gateway_version
+				data = JSON.stringify(data);
+				//				if(!data) {
+				//					$("#input_area").focus();
+				//					layer.msg("输入信息为空！");
+				//					return false;
+				//				}
 				if(!is_connect_socket) {
 					confirm_connect();
 				} else {
-					data = {
-						'data':data
-					};
-					$.ajax({
-						type:"post",
-						data:data,
-						url:"index/index/send",
-						success:function(data){
-							
-						},
-						error:function(){
-							layer.msg("消息发送失败！");
-						},
-						async:true
-					});
+					ws.send(data);
 				}
+			}
+
+			function offline() {
+				layer.msg('offlineing...', {
+							icon: 16,
+							shade: 0.5,
+							time:10000,
+					});
+				var data = {
+					'uid': $('#uid').val(),
+				}
+				ws.close();
+				is_connect_socket = false;
+				data = JSON.stringify(data);
+				$.ajax({
+					type: "post",
+					url: "index/index/offline",
+					data: data,
+					success: function(data) {
+						layer.msg("已下线");
+						$("#login_out").html("上线");
+						$("#login_out").attr("onclick","get_connect()");
+					},
+					error: function(data) {
+						console.log(data);
+					},
+					async: true
+				});
+			}
+			function change(){
+				var new_username = {'new_name':$("#new_username").val()};
+				console.log(new_username['new_name'].length);
+				var length = new_username['new_name'].length;
+				if(!(length<8 && length>1)){
+					layer.tips('请检查此处', '#new_username', {
+					  tips: 3
+					});
+					return false;
+				}
+				layer.msg('提交中', {
+							icon: 16,
+							shade: 0.5,
+							time:10000,
+					});
+				$.ajax({
+					type:"post",
+					data:new_username,
+					dataType:"json",
+					url:"index/index/change",
+					success:function(data){
+						$("#username").attr("value",data);
+						layer.msg("已修改");
+					},
+					error:function(data){
+						console.log(data);
+					},
+					async:true
+				});
 			}
 		</script>
 	</body>

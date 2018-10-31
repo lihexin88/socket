@@ -1,17 +1,15 @@
 <?php
 namespace app\index\controller;
 use app\common\model\UserInfo;
-<<<<<<< HEAD
-use GatewayWorker\Lib\Gateway;
-=======
+
 use app\gatewayapp\controller\GwEvents;
 
 use app\index\controller\VerifyLogin;
-
+use \think\Db as Dbmodel;
+use GatewayWorker\Lib\Db;
 use GatewayWorker\Lib\Gateway;
 use think\Request;
 
->>>>>>> parent of 9edf1bf... change_gateway_version
 class Index extends VerifyLogin
 {
     /**
@@ -20,15 +18,8 @@ class Index extends VerifyLogin
      */
     public function index()
     {
-<<<<<<< HEAD
 
-//        $onlines = Gateway::getAllUidCount();
-//        var_export($onlines);
-//        exit();
-=======
->>>>>>> parent of 9edf1bf... change_gateway_version
         $this->assign('user_info',$this->user_info);
-        $this->assign('uid',$this->uid);
         return $this->fetch();
     }
 
@@ -37,19 +28,23 @@ class Index extends VerifyLogin
      */
     public function bind()
     {
-        print_r($_POST);
+//        print_r($_POST);
 //        exit();
-<<<<<<< HEAD
+
+
         $client_ids = Gateway::getClientIdByUid($this->uid);
         for($i = 0;$i<sizeof($client_ids);$i++){
             Gateway::closeClient($client_ids[$i]);
         }
-=======
->>>>>>> parent of 9edf1bf... change_gateway_version
-        $r = msg_handle(3,"登录成功");
         Gateway::bindUid($_POST['client_id'],$this->uid);
-        $r = msg_handle('normal','已绑定uid');
+//        print_r($_POST);
+//        print_r($this->uid);
+//        exit();
+        $r = msg_handle(3,['message'=>'绑定成功']);
         Gateway::sendToUid($this->uid,json_encode($r));
+//        print_r($this->user_info);
+        $r = msg_handle(3,['message'=>$this->user_info['username']."上线"]);
+        Gateway::sendToAll(json_encode($r));
     }
 
     /**
@@ -63,6 +58,34 @@ class Index extends VerifyLogin
             'message'=>$_POST['data']
         ];
         $r = msg_handle('normal',$data);
+        Gateway::sendToAll(json_encode($r));
+    }
+
+    /**
+     * 更改用户信息
+     * @return bool
+     */
+    public function change()
+    {
+//        $new_name = UserInfo::get(['id'=>$this->uid]);
+//        $new_name->username = $_POST['new_name'];
+//        $new_name->save();
+        //更新用户信息
+        Dbmodel::name('user_info')->where(['id'=>$this->uid])->update(['username'=>$_POST['new_name']]);
+        $this->user_info['username'] = $_POST['new_name'];
+        return $this->user_info['username'];
+    }
+
+    /**
+     *
+     * 下线处理
+     * @throws \Exception
+     */
+    public function offline()
+    {
+//        print_r($_POST);
+//        exit;
+        $r = msg_handle(3,['message'=>$this->user_info['username']."已下线"]);
         Gateway::sendToAll(json_encode($r));
     }
 
